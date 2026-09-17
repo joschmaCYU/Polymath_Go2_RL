@@ -46,16 +46,24 @@ RUN pip install --no-cache-dir uv
 
 # 3. Installation de PyTorch CUDA 12.1 (compatible avec pilote NVIDIA 535.x)
 RUN uv pip install --system --no-cache \
-    torch torchvision --index-url https://download.pytorch.org/whl/cu121 \
-    && uv pip install --system --no-cache scipy tensorboard viser trimesh
+    torch torchvision --index-url https://download.pytorch.org/whl/cu121
+
+# 4. Dependances systeme Python et bibliotheques requises pour mjlab et la simulation
+RUN uv pip install --system --no-cache \
+    scipy tensorboard viser trimesh \
+    mujoco==3.5.0 mujoco-warp==3.5.0 warp-lang==1.12.0 \
+    tyro tensordict onnx onnxscript wandb mediapy imageio-ffmpeg torchrunx GitPython prettytable tqdm
+
+# 5. Installation de mjlab et rsl-rl-lib sans ecraser PyTorch CUDA
+RUN uv pip install --system --no-cache --no-deps mjlab==1.2.0 rsl-rl-lib==5.0.1
 
 WORKDIR /app
 
-# 4. Copie du setup et installation du package
+# 6. Copie du setup et installation du package local
 COPY setup.py /app/
 COPY src/ /app/src/
 
-RUN uv pip install --system --no-cache --extra-index-url https://download.pytorch.org/whl/cu121 -e .
+RUN uv pip install --system --no-cache --no-deps -e .
 
 # 5. Copie du reste des scripts du projet
 COPY . /app/

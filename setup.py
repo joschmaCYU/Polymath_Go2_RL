@@ -4,11 +4,9 @@ from setuptools import setup, find_packages
 
 # Minimum dependencies required prior to installation
 INSTALL_REQUIRES = [
-    "mjlab==1.2.0",
     "mujoco==3.5.0",
     "mujoco-warp==3.5.0",
     "warp-lang==1.12.0",
-    "rsl-rl-lib==5.0.1",
     "scipy",
     "tensorboard",
     "viser",
