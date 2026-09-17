@@ -156,6 +156,18 @@ def main():
   print(f"   * Seed      : {args.seed}")
   print("=" * 75)
 
+  if "cpu" in str(args.device) or not torch.cuda.is_available():
+    print("\n" + "!" * 80)
+    print("[ATTENTION CRITIQUE] L'ENTRAINEMENT S'EXECUTE SUR CPU ET NON SUR GPU CUDA !")
+    print("   * Sur CPU, la simulation de 4096 robots prend ~132s par pas de collecte (19h l'etape 1).")
+    print("   * Sur GPU CUDA, cette meme etape ne prend que ~2.0s par iteration (4 min l'etape 1).")
+    print("   * Diagnostic si vous utilisez Docker :")
+    print("       1. Sur la machine hote, verifiez que le pilote repond : nvidia-smi")
+    print("       2. Verifiez que nvidia-container-toolkit est installe et configure pour Docker :")
+    print("          sudo nvidia-ctk runtime configure --runtime=docker && sudo systemctl restart docker")
+    print("       3. Testez dans Docker : docker compose run --rm go2-rl nvidia-smi")
+    print("!" * 80 + "\n")
+
   # Load configurations
   env_cfg = load_env_cfg(task_id)
   agent_cfg = load_rl_cfg(task_id)

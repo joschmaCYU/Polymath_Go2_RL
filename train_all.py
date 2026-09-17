@@ -28,6 +28,7 @@ import signal
 import subprocess
 import sys
 import time
+import torch
 
 
 def find_latest_checkpoint(log_dir: Path) -> Path | None:
@@ -266,7 +267,25 @@ def main():
   print(f"   * Envs         : {args.num_envs}")
   print(f"   * Iterations S1: {args.iters_stage1} | S2: {args.iters_stage2} | S3: {args.iters_stage3}")
   print(f"   * Total prevu  : {args.iters_stage1 + args.iters_stage2 + args.iters_stage3} iterations")
+  if torch.cuda.is_available():
+    print(f"   * Device       : cuda:0 ({torch.cuda.get_device_name(0)})")
+  else:
+    print("   * Device       : CPU (ATTENTION: PAS DE GPU DETECTE)")
   print("=" * 80)
+
+  if not torch.cuda.is_available():
+    print("\n" + "!" * 80)
+    print("[ATTENTION CRITIQUE] AUCUN GPU CUDA N'EST DETECTE DANS CET ENVIRONNEMENT !")
+    print("   * Le code tourne actuellement sur CPU.")
+    print("   * Sur CPU, la collecte prend ~132 secondes par iteration (~19h l'etape 1).")
+    print("   * Sur GPU (RTX 4070 / RTX 2060), la meme iteration prend seulement ~2.0 secondes.")
+    print("   * Pour resoudre cela dans Docker sur votre machine hote :")
+    print("       1. Verifiez que vos pilotes NVIDIA fonctionnent : nvidia-smi")
+    print("       2. Installez le toolkit NVIDIA pour Docker :")
+    print("          sudo nvidia-ctk runtime configure --runtime=docker")
+    print("          sudo systemctl restart docker")
+    print("       3. Verifiez avec : docker compose run --rm go2-rl nvidia-smi")
+    print("!" * 80 + "\n")
   print("[INFO] Appuyez sur Ctrl+C a tout moment pour interrompre l'execution.\n")
 
   current_checkpoint = args.checkpoint
