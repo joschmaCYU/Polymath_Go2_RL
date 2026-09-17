@@ -101,6 +101,7 @@ python play_simple.py --viewer viser
 ## 5. Commandes Docker (Serveurs distants ou GPU dedie)
 
 ### 1. Construire l'image Docker
+Sur la branche `cuda-12-1` (calibree pour les pilotes NVIDIA 535.x et CUDA 12.1) :
 ```bash
 docker compose build
 ```

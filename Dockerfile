@@ -1,7 +1,7 @@
 # ==============================================================================
-# Dockerfile pour Unitree Go2 Reinforcement Learning (mjlab / MuJoCo Warp / GPU)
+# Dockerfile pour Unitree Go2 Reinforcement Learning (CUDA 12.1 / Driver 535+)
 # ==============================================================================
-FROM nvidia/cuda:12.4.1-devel-ubuntu22.04
+FROM nvidia/cuda:12.1.1-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
@@ -36,9 +36,9 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 # 2. Installation de uv pour des builds ultra-rapides
 RUN pip install --no-cache-dir uv
 
-# 3. Installation de PyTorch CUDA et dependances lourdes (couche en cache independante du code)
+# 3. Installation de PyTorch CUDA 12.1 (compatible avec pilote NVIDIA 535.x)
 RUN uv pip install --system --no-cache \
-    torch torchvision --index-url https://download.pytorch.org/whl/cu124 \
+    torch torchvision --index-url https://download.pytorch.org/whl/cu121 \
     && uv pip install --system --no-cache scipy tensorboard viser trimesh
 
 WORKDIR /app
@@ -47,7 +47,7 @@ WORKDIR /app
 COPY setup.py /app/
 COPY src/ /app/src/
 
-RUN uv pip install --system --no-cache -e .
+RUN uv pip install --system --no-cache --extra-index-url https://download.pytorch.org/whl/cu121 -e .
 
 # 5. Copie du reste des scripts du projet
 COPY . /app/

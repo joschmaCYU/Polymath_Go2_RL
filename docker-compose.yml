@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: unitree-go2-rl:latest
+    image: unitree-go2-rl:cuda121
     container_name: go2-rl-runner
     ipc: host
     runtime: nvidia
@@ -21,7 +21,7 @@ services:
     command: python train_all.py
 
   tensorboard:
-    image: unitree-go2-rl:latest
+    image: unitree-go2-rl:cuda121
     container_name: go2-rl-tensorboard
     volumes:
       - .:/app

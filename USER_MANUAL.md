@@ -92,9 +92,10 @@ A la racine du projet (`/home/josch/Projects/Polymath`) :
 ```bash
 docker compose build
 ```
-L'image `unitree-go2-rl:latest` installe automatiquement :
-- Ubuntu 22.04 avec CUDA 12.4
-- PyTorch 2.7 dev avec CUDA
+Sur la branche `cuda-12-1` (pour pilotes NVIDIA 535.x) :
+L'image `unitree-go2-rl:cuda121` installe automatiquement :
+- Ubuntu 22.04 avec CUDA 12.1.1
+- PyTorch avec support CUDA 12.1 (`cu121`) compatible avec les pilotes 535.x
 - MuJoCo 3.5.0 et MuJoCo Warp 3.5.0
 - RSL-RL 5.0.1 et mjlab 1.2.0
 - Viser (visualisation 3D web), TensorBoard et dependances robotiques
