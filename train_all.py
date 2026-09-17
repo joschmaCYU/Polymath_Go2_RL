@@ -190,6 +190,12 @@ def parse_args():
     help="Etape de depart du curriculum (1: Plat, 2: Escaliers/Trous, 3: Big Map)",
   )
   parser.add_argument(
+    "--resume",
+    "-r",
+    action="store_true",
+    help="Reprendre l'entrainement depuis le dernier checkpoint disponible (meme pour l'etape 1)",
+  )
+  parser.add_argument(
     "--checkpoint",
     "-c",
     type=str,
@@ -264,11 +270,13 @@ def main():
   print("[INFO] Appuyez sur Ctrl+C a tout moment pour interrompre l'execution.\n")
 
   current_checkpoint = args.checkpoint
-  if not current_checkpoint and args.from_stage > 1:
+  if not current_checkpoint and (args.resume or args.from_stage > 1):
     latest = find_latest_checkpoint(log_root)
     if latest:
       current_checkpoint = str(latest)
       print(f"[INFO] Reprise automatique depuis le dernier checkpoint disponible : {current_checkpoint}")
+    elif args.resume:
+      print("[INFO] Aucun checkpoint existant trouve pour --resume, demarrage a zero.")
 
   for stage_info in stages:
     if stage_info["stage_num"] < args.from_stage:

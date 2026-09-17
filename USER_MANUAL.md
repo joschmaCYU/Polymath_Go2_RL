@@ -191,18 +191,35 @@ python train_all.py
 Bien que la commande par defaut suffise, plusieurs arguments sont configurables si necessaire :
 
 ```bash
-# Modifier le nombre de robots simules en parallele (defaut: 1024)
-python train_all.py --num_envs 512
+# Reprendre l'entrainement depuis le dernier checkpoint (fonctionne meme des l'etape 1)
+python train_all.py --resume
+# Ou via Docker :
+docker compose run --rm go2-rl python train_all.py --resume
+
+# Reprendre uniquement l'etape 1 isolee sur le dernier checkpoint
+python train_simple.py --stage 1 --resume
+# Ou via Docker :
+docker compose run --rm go2-rl python train_simple.py --stage 1 --resume
 
 # Demarrer directement a partir d'une etape specifique (ex: etape 2)
 python train_all.py --from_stage 2
 
-# Ajuster le nombre d'iterations par etape
-python train_all.py --iters_stage1 500 --iters_stage2 1000 --iters_stage3 3000
-
 # Demarrer avec un checkpoint externe specifique
 python train_all.py --checkpoint /chemin/vers/model_500.pt
+
+# Modifier le nombre de robots simules en parallele (ex: 2048 pour doubler la vitesse)
+python train_all.py --num_envs 2048
+
+# Ajuster le nombre d'iterations par etape
+python train_all.py --iters_stage1 500 --iters_stage2 1000 --iters_stage3 3000
 ```
+
+### Peut-on faire un "resume" des l'etape 1 ?
+**Oui, absolument !**
+- Si vous interrompez l'apprentissage au milieu de l'etape 1 (par exemple a l'iteration 400 sur 1000), vous pouvez relancer soit avec `python train_all.py --resume`, soit avec `python train_simple.py --stage 1 --resume`.
+- Le script scanne automatiquement le repertoire `logs/rsl_rl/go2_velocity/` et charge le fichier `model_*.pt` le plus recent.
+- **Compatibilite totale** : L'espace d'observation a ete unifie a 234 dimensions pour l'acteur et 261 pour le critique sur toutes les etapes. Il n'y a donc aucun risque d'erreur `size mismatch`.
+- S'il n'existe encore aucun checkpoint sur votre machine, le flag `--resume` le detecte poliment et commence un entrainement tout neuf sans planter.
 
 ---
 

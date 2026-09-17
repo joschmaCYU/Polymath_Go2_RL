@@ -38,15 +38,28 @@ Chaque etape surveille les erreurs GPU, redemarre automatiquement au dernier che
 ## 3. Options de l'Entrainement Automatique (`train_all.py`)
 
 ```bash
-# Lancement standard avec 1024 robots paralleles (recommande pour 6 Go VRAM)
+# Lancement standard de zero (1024 robots paralleles)
 python train_all.py
+
+# Reprendre depuis le dernier checkpoint sauvegarde (fonctionne meme des l'etape 1)
+python train_all.py --resume
+# Ou via Docker :
+docker compose run --rm go2-rl python train_all.py --resume
 
 # Commencer directement a l'etape 2 ou 3
 python train_all.py --from_stage 2
 python train_all.py --from_stage 3
 
-# Ajuster le nombre de robots simules
-python train_all.py --num_envs 512
+# Reprendre uniquement l'etape 1 isolee sur le dernier checkpoint
+python train_simple.py --stage 1 --resume
+# Ou via Docker :
+docker compose run --rm go2-rl python train_simple.py --stage 1 --resume
+
+# Reprendre avec un checkpoint specifique
+python train_all.py --checkpoint logs/rsl_rl/go2_velocity/2026-09-17_19-34-26_flat/model_500.pt
+
+# Ajuster le nombre de robots simules (ex: 2048 pour doubler la vitesse sur RTX 2060)
+python train_all.py --num_envs 2048
 
 # Personnaliser le nombre d'iterations par etape
 python train_all.py --iters_stage1 500 --iters_stage2 1000 --iters_stage3 2000
