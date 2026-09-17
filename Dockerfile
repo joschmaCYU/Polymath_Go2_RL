@@ -6,9 +6,13 @@ FROM nvidia/cuda:12.4.1-devel-ubuntu22.04
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV NVIDIA_VISIBLE_DEVICES=all
-ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics
+ENV NVIDIA_DRIVER_CAPABILITIES=all
+ENV CUDA_HOME=/usr/local/cuda
+ENV PATH=/usr/local/cuda/bin:${PATH}
+ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:${LD_LIBRARY_PATH}
+ENV UV_HTTP_TIMEOUT=300
 
-# 1. Dépendances système et bibliothèques graphiques OpenGL / EGL
+# 1. Dependances systeme, acceleration materielle GPU et OpenGL / EGL
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
@@ -17,10 +21,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     wget \
     curl \
+    kmod \
+    libglvnd0 \
+    libgl1 \
+    libglx0 \
+    libegl1 \
+    libgles2 \
     libgl1-mesa-glx \
     libglib2.0-0 \
-    libegl1 \
-    libgl1 \
     libxrender1 \
     libxcursor1 \
     libxinerama1 \
@@ -30,7 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libyaml-cpp-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Créer un lien symbolique pour python
+# Creer un lien symbolique pour python
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
 # 2. Installation de uv pour des builds ultra-rapides
@@ -47,7 +55,7 @@ WORKDIR /app
 COPY setup.py /app/
 COPY src/ /app/src/
 
-RUN uv pip install --system --no-cache -e .
+RUN uv pip install --system --no-cache --extra-index-url https://download.pytorch.org/whl/cu124 -e .
 
 # 5. Copie du reste des scripts du projet
 COPY . /app/
