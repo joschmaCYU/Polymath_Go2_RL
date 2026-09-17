@@ -11,13 +11,13 @@ Chaque etape beneficie de la supervision auto-recovery :
   - Protection contre les boucles infinies si un crash survient en moins de 30 secondes.
   - Transmission automatique du dernier checkpoint a l'etape suivante.
 
-Usage simple (aucune option requise) :
+Usage simple (calibre pour RTX 4070 8 Go - duree totale ~25 a 30 min) :
   python train_all.py
 
 Usage avance :
-  python train_all.py --num_envs 1024
+  python train_all.py --num_envs 2048  # Si execution sur carte 6 Go
   python train_all.py --from_stage 2
-  python train_all.py --iters_stage1 1000 --iters_stage2 1500 --iters_stage3 2500
+  python train_all.py --resume
 """
 
 import argparse
@@ -178,8 +178,8 @@ def parse_args():
     "--num_envs",
     "-n",
     type=int,
-    default=1024,
-    help="Nombre d'environnements paralleles (1024 adapte a 6 Go VRAM)",
+    default=4096,
+    help="Nombre d'environnements paralleles (4096 calibre pour RTX 4070 8 Go, 1024-2048 pour 6 Go)",
   )
   parser.add_argument(
     "--from_stage",
@@ -205,20 +205,20 @@ def parse_args():
   parser.add_argument(
     "--iters_stage1",
     type=int,
-    default=1000,
-    help="Nombre d'iterations pour l'etape 1 (Sol plat)",
+    default=500,
+    help="Nombre d'iterations pour l'etape 1 (Sol plat, ~49M steps avec 4096 envs)",
   )
   parser.add_argument(
     "--iters_stage2",
     type=int,
-    default=1500,
-    help="Nombre d'iterations pour l'etape 2 (Escaliers et trous)",
+    default=750,
+    help="Nombre d'iterations pour l'etape 2 (Escaliers et trous, ~73M steps avec 4096 envs)",
   )
   parser.add_argument(
     "--iters_stage3",
     type=int,
-    default=2500,
-    help="Nombre d'iterations pour l'etape 3 (Big Map complexe)",
+    default=1200,
+    help="Nombre d'iterations pour l'etape 3 (Big Map complexe, ~118M steps avec 4096 envs)",
   )
   parser.add_argument(
     "--max_restarts",

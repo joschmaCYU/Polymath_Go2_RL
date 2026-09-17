@@ -53,8 +53,8 @@ def parse_args():
     "--num_envs",
     "-n",
     type=int,
-    default=1024,
-    help="Nombre d'environnements parallèles simulés (adapté aux 6 Go VRAM de la RTX 2060)",
+    default=4096,
+    help="Nombre d'environnements parallèles simulés (4096 calibré pour RTX 4070 8 Go, 1024-2048 pour 6 Go)",
   )
   parser.add_argument(
     "--max_iterations",
