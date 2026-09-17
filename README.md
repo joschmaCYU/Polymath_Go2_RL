@@ -6,78 +6,85 @@ Ce projet a été nettoyé pour ne conserver que les composants indispensables a
 
 ---
 
-## ⚡ Démarrage Rapide
+## 1. Demarrage Rapide
 
-### 1. Entraîner le Go2
+### 1. Entrainer le Go2 en 3 etapes automatiques (Recommande)
 ```bash
-# Entraînement direct sur la Big Map complexe
-python train_simple.py
-
-# Ou avec le superviseur auto-recovery (relance automatique en cas de crash)
-python recover_train.py
+# Enchaine automatiquement Etape 1 (plat) -> Etape 2 (escaliers/trous) -> Etape 3 (Big Map)
+python train_all.py
 ```
 
-### 2. Jouer / Piloter le Go2
+### 2. Jouer / Piloter le Go2 au clavier
 ```bash
-# Charge automatiquement le dernier checkpoint entraîné
+# Charge automatiquement le dernier checkpoint entraine
 python play_simple.py
 ```
-> **Contrôles clavier (cliquez dans la fenêtre graphique pour focus) :**
-> - **Flèche HAUT / W** : Avancer
-> - **Flèche BAS / S** : Reculer
-> - **Flèche GAUCHE / A** : Tourner à gauche
-> - **Flèche DROITE / D** : Tourner à droite
-> - **Espace / X** : Arrêt complet
+> **Controles clavier (cliquez dans la fenetre graphique pour focus) :**
+> - **Fleche HAUT / W** : Avancer
+> - **Fleche BAS / S** : Reculer
+> - **Fleche GAUCHE / A** : Tourner a gauche
+> - **Fleche DROITE / D** : Tourner a droite
+> - **Espace / X** : Arret complet
 
 ---
 
-## 🎓 Curriculum en 3 Étapes
+## 2. Curriculum en 3 Etapes
 
-Pour un entraînement progressif optimal :
+Pour un entrainement progressif etape par etape :
 
-1. **Étape 1 : Sol Plat**
+1. **Etape 1 : Sol Plat**
    ```bash
    python train_simple.py --stage 1 --max_iterations 1500 --num_envs 1024
    ```
-2. **Étape 2 : Escaliers et Trous**
+2. **Etape 2 : Escaliers et Trous**
    ```bash
    python train_simple.py --stage 2 --resume --max_iterations 3000 --num_envs 1024
    ```
-3. **Étape 3 : Big Map Extérieure Complexe**
+3. **Etape 3 : Big Map Exterieure Complexe**
    ```bash
    python train_simple.py --stage 3 --resume --max_iterations 6000 --num_envs 1024
    ```
 
 ---
 
-## 🛡️ Superviseur Anti-Crash (`recover_train.py`)
+## 3. Superviseur Anti-Crash (recover_train.py)
 
-Gère les aléas matériels ou plantages GPU :
+Gere les aleas materiels ou plantages GPU :
 ```bash
-# Surveille le processus et reprend au dernier checkpoint (arrête après 10 crashs ou si crash immédiat)
+# Surveille le processus et reprend au dernier checkpoint (arret apres 10 crashs ou si crash < 30s)
 python recover_train.py --stage 3 --num_envs 1024
 ```
 
 ---
 
-## 🐳 Déploiement Docker
+## 4. Deploiement Docker
 
-Un `Dockerfile` et un `docker-compose.yml` complets avec support GPU NVIDIA sont prêts à l'emploi :
+Un `Dockerfile` et un `docker-compose.yml` complets avec support GPU NVIDIA sont prets a l'emploi :
 
 ```bash
 # 1. Construction de l'image
 docker compose build
 
-# 2. Entraînement avec GPU
-docker compose run --rm go2-rl python recover_train.py --stage 3
+# 2. Entrainement automatique complet avec GPU
+docker compose run --rm go2-rl python train_all.py
 
-# 3. Visualisation 3D Web (Viser)
+# 3. Suivi en temps reel avec TensorBoard
+docker compose up -d tensorboard
+# Accessible sur http://localhost:6006
+
+# 4. Visualisation 3D Web (Viser)
 docker compose run --rm -p 8080:8080 go2-rl python play_simple.py --viewer viser
+# Accessible sur http://localhost:8080
+
+# 5. Visualisation fenetre native (X11)
+xhost +local:root
+docker compose run --rm -e DISPLAY=:1 go2-rl python play_simple.py
 ```
-Ouvrez ensuite `http://localhost:8080` dans votre navigateur.
 
 ---
 
-## 📖 Documentation complète
+## 5. Documentation complete
 
-Pour la liste exhaustive des options, drapeaux et astuces, consultez le [CHEAT_SHEET.md](CHEAT_SHEET.md).
+Pour la liste exhaustive des options, drapeaux et astuces, consultez :
+- [CHEAT_SHEET.md](CHEAT_SHEET.md) : Guide rapide de toutes les commandes.
+- [USER_MANUAL.md](USER_MANUAL.md) : Manuel utilisateur complet et architecture detaillee.

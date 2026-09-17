@@ -21,15 +21,17 @@ Chaque etape surveille les erreurs GPU, redemarre automatiquement au dernier che
 
 ---
 
-## 2. Tableau Recapitulatif des Commandes
-
 | Action | Commande | Description |
 | :--- | :--- | :--- |
-| **Entrainement complet (3 etapes)** | `python train_all.py` | Enchaine Plat -> Escaliers -> Big Map avec auto-recovery |
-| **Visualisation au clavier** | `python play_simple.py` | Charge le dernier modele et permet de piloter aux fleches |
-| **Visualisation Web 3D** | `python play_simple.py --viewer viser` | Visualiseur 3D interactif dans votre navigateur Web |
+| **Entrainement complet (Docker)** | `docker compose run --rm go2-rl python train_all.py` | Enchaine les 3 etapes dans le conteneur GPU isole |
+| **Entrainement complet (Local)** | `python train_all.py` | Enchaine Plat -> Escaliers -> Big Map avec auto-recovery |
+| **Suivi TensorBoard (Docker)** | `docker compose up -d tensorboard` | Tableau de bord courbes RL ouvert sur `http://localhost:6006` |
+| **Visualisation Web 3D (Docker)** | `docker compose run --rm -p 8080:8080 go2-rl python play_simple.py --viewer viser` | Visualiseur 3D interactif dans le navigateur `http://localhost:8080` |
+| **Visualisation GUI Native (Docker)** | `docker exec -it -e DISPLAY=:1 go2-rl-runner python play_simple.py` | Affichage graphique natif OpenGL via X11 / xhost |
+| **Visualisation au clavier (Local)** | `python play_simple.py` | Charge le dernier modele et permet de piloter aux fleches |
 | **Entrainement supervise par etape** | `python recover_train.py --stage 1` | Entraine uniquement l'etape 1 avec auto-recovery (30s) |
 | **Entrainement simple manuel** | `python train_simple.py --stage 1` | Lance un entrainement direct sans superviseur |
+| **Shell interactif Docker** | `docker compose run --rm go2-rl bash` | Ouvre un terminal bash directement a l'interieur du conteneur |
 
 ---
 
@@ -99,9 +101,103 @@ docker compose run --rm -p 8080:8080 go2-rl python play_simple.py --viewer viser
 ```
 Ouvrez ensuite `http://localhost:8080` dans votre navigateur Web.
 
+### 4. Visualisation GUI Native (X11 / OpenGL) avec xhost et DISPLAY=:1
+
+Pour afficher la fenetre 3D native de MuJoCo directement sur votre ecran X11 depuis Docker :
+
+1. Autoriser l'acces local au serveur X11 sur votre machine hote :
+```bash
+xhost +local:root
+# Ou pour autoriser toutes les connexions locales :
+xhost +
+```
+
+2. Executer dans un conteneur deja en cours d'execution (`docker exec`) :
+```bash
+docker exec -it -e DISPLAY=:1 go2-rl-runner python play_simple.py
+```
+*(Remplacez `:1` par `:0` ou `$DISPLAY` si votre serveur graphique tourne sur l'ecran 0)*
+
+3. Ou lancer un nouveau conteneur ponctuel avec affichage :
+```bash
+docker compose run --rm -e DISPLAY=:1 go2-rl python play_simple.py
+```
+
+4. Equivalent direct avec la commande pure `docker run` :
+```bash
+docker run --rm -it \
+  --runtime=nvidia \
+  --ipc=host \
+  --net=host \
+  -e DISPLAY=:1 \
+  -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+  -v $(pwd):/app \
+  unitree-go2-rl:latest python play_simple.py
+```
+
+### 5. Lancer TensorBoard dans Docker
+
+Visualisez en direct les courbes d'apprentissage, recompenses et pertes de politique sans surcharger votre machine :
+
+1. En arriere-plan via docker-compose (recommande) :
+```bash
+docker compose up -d tensorboard
+```
+Accedez ensuite a l'interface web : `http://localhost:6006`
+
+Pour arreter TensorBoard :
+```bash
+docker compose stop tensorboard
+```
+
+2. En commande directe ponctuelle :
+```bash
+docker compose run --rm -p 6006:6006 go2-rl tensorboard --logdir logs/rsl_rl/go2_velocity --host 0.0.0.0 --port 6006
+```
+
+3. Dans un conteneur deja en cours d'execution (`docker exec`) :
+```bash
+docker exec -it go2-rl-runner tensorboard --logdir logs/rsl_rl/go2_velocity --host 0.0.0.0 --port 6006
+```
+
+4. Equivalent direct avec pure `docker run` :
+```bash
+docker run --rm -it -p 6006:6006 -v $(pwd):/app unitree-go2-rl:latest tensorboard --logdir logs/rsl_rl/go2_velocity --host 0.0.0.0 --port 6006
+```
+
+### 6. Ouvrir un Terminal Interactif dans le Conteneur Docker
+
+Pour tester des commandes Python, explorer l'arborescence ou executer des scripts arbitraires :
+```bash
+docker compose run --rm go2-rl bash
+# Ou si le conteneur go2-rl-runner tourne deja :
+docker exec -it go2-rl-runner bash
+```
+
 ---
 
-## 6. Structure des Fichiers
+## 6. Optimisation des Performances d'Entrainement (RTX 2060 6 Go)
+
+Pour maximiser le debit de calcul (FPS / steps par seconde) et reduire le temps total d'apprentissage :
+
+1. **Doubler le nombre de robots paralleles (`--num_envs 2048` ou `4096`)** :
+   Par defaut, 1024 robots n'occupent que ~1.5 Go de VRAM sur vos 6 Go. Passer a 2048 environnements double quasiment la vitesse de collecte des donnees (~2.6 Go VRAM) sans risque de debordement memoire :
+   ```bash
+   python train_all.py --num_envs 2048
+   ```
+
+2. **Reduction des calculs de collision continue (`ccd_iterations = 100`)** :
+   La valeur par defaut de 500 dans la physique MuJoCo Warp a ete baissee a 100. Cela accelere significativement chaque pas physique sans degrader la stabilite des contacts des pattes.
+
+3. **Suivi local sans latence reseau** :
+   L'utilisation de TensorBoard par defaut (`--logger tensorboard`) evite les ralentissements lies a la synchronisation internet de services externes comme wandb.
+
+4. **Intervalle de sauvegarde optimise** :
+   Enregistrer les checkpoints toutes les 50 ou 100 iterations (`--save_interval 50`) reduit les temps de pause d'ecriture disque I/O.
+
+---
+
+## 7. Structure des Fichiers
 
 - train_all.py : Pipeline d'apprentissage complet en 3 etapes avec auto-recovery et securite 30s
 - play_simple.py : Visualisation 3D avec pilotage interactif au clavier

@@ -10,7 +10,7 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
-      - DISPLAY=${DISPLAY}
+      - DISPLAY=${DISPLAY:-:0}
     volumes:
       - .:/app
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
@@ -19,3 +19,14 @@ services:
     stdin_open: true
     tty: true
     command: python train_all.py
+
+  tensorboard:
+    image: unitree-go2-rl:latest
+    container_name: go2-rl-tensorboard
+    volumes:
+      - .:/app
+    ports:
+      - "6006:6006"
+    working_dir: /app
+    command: tensorboard --logdir logs/rsl_rl/go2_velocity --host 0.0.0.0 --port 6006
+
